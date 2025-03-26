@@ -1,42 +1,61 @@
-import numpy as np
-import math
-import matplotlib.pyplot as plt
+import sys
+from typing import Optional, Tuple
+from sys import maxsize
 
 
-def O_1(n): return np.ones_like(n)  # O(1)
-def O_log_n(n): return np.log2(n)  # O(log n)
-def O_n(n): return n  # O(n)
-def O_n_log_n(n): return n * np.log2(n)  # O(n log n)
-def O_n2(n): return n**2  # O(n^2)
-def O_2n(n): return 2**n  # O(2^n)
-def O_n_fact(n): return [math.factorial(i) for i in n]  # O(n!)
+def find_two_indexes_quad_O(expected_sum, data):
+    for first_index, first_num in enumerate(data):
+        for second_index, second_num in enumerate(data):
+            if first_index == second_index:
+                continue
+            elif first_num + second_num == expected_sum:
+                return first_index, second_index
 
 
-n = np.linspace(1, 20, 100)  # Значения от 1 до 20
-n_int = np.arange(1, 11)  # Для факториала (ограничено)
+def find_two_indexes_linear_O(
+        expected_sum: int, data: list[int]
+        ) -> Optional[Tuple[int, int]]:
+    complements = dict()
+    for index, num in enumerate(data):
+        complement = expected_sum - num
+        if complement in complements and complements[complement] != index:
+            return complements[complement], index
+        complements[num] = index
 
 
-plt.figure(figsize=(10, 6))
+def two_pointer_method(
+        expected_sum: int, data: list[int]
+        ) -> Optional[Tuple[int, int]]:
+    left_pointer = 0
+    right_pointer = len(data) - 1
+    while left_pointer < right_pointer:
+        result = data[left_pointer] + data[right_pointer]
+        if result == expected_sum:
+            return (left_pointer, right_pointer)
+        elif result > expected_sum:
+            right_pointer -= 1
+        else:
+            left_pointer += 1
 
-# Заливка областей
-plt.fill_between(n, O_n(n), O_n_log_n(n), color="yellow", alpha=0.5, label="Приемлемо")
-plt.fill_between(n, O_n_log_n(n), O_n2(n), color="lightblue", alpha=0.5, label="Плохо")
-plt.fill_between(n, O_n2(n), O_2n(n), color="blue", alpha=0.5, label="Ужас-ужас")
 
-# Линии функций
-plt.plot(n, O_1(n), label="O(1)", color="green", linewidth=2)
-plt.plot(n, O_log_n(n), label="O(log n)", color="darkgreen", linewidth=2)
-plt.plot(n, O_n(n), label="O(n)", color="orange", linewidth=2)
-plt.plot(n, O_n_log_n(n), label="O(n log n)", color="red", linewidth=2)
-plt.plot(n, O_n2(n), label="O(n^2)", color="purple", linewidth=2)
-plt.plot(n, O_2n(n), label="O(2^n)", color="brown", linewidth=2)
-plt.plot(n_int, O_n_fact(n_int), label="O(n!)", color="black", linewidth=2)
 
-# Подписи
-plt.xlabel("Количество элементов (n)")
-plt.ylabel("Количество операций")
-plt.legend()
-plt.yscale("log")  # Логарифмическая шкала
-plt.grid(True, which="both", linestyle="--")
+def find_min_slice_sum(data, elements_in_slice):
+    # Считаем сумму первого окна.
+    window_sum = sum(data[0:elements_in_slice])
+    print(data[0:elements_in_slice])
+    # Запоминаем результат подсчёта в качестве минимальной суммы.
+    min_sum = window_sum
+    # В цикле перебираем индексы массива от elements_in_slice до последнего.
+    for index in range(elements_in_slice, len(data)):
+        # К сумме предыдущего окна добавляем новый элемент
+        # и вычитаем "вышедший":
+        window_sum += data[index] - data[index - elements_in_slice]
+        # Находим минимальную сумму.
+        min_sum = min(min_sum, window_sum)
+    return min_sum
 
-plt.show()
+
+if __name__ == '__main__':
+    data = [5, -3, -2, 10, 2, 7, 1, -6, 13]
+    elements_in_slice = 4
+    print(find_min_slice_sum(data, elements_in_slice))
